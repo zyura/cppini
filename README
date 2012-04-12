@@ -2,4 +2,131 @@
 C++ Ini Files Parser
 --------------------
 
-project description will be here...
+This small fast C++ library provides convenient object-oriented ways
+to parse standard ini files (text files containing key=value pairs
+which could be included in [groups]).
+
+Send bug reports to:
+https://github.com/zyura/cppini/issues
+
+
+INI file format
+---------------
+
+Ini sections (or groups) are enclosed in square brackets.
+
+Second names and parameter names can contain spaces.
+
+Comments start with semicolon, can be located at the end of the line.
+
+All space characters are trimmed around the section name, parameter name
+and value.
+
+
+Example of a valid ini file
+---------------------------
+[Group1]
+; Comments start with ;
+param1 = value1 ; inline comment
+param2=value2
+
+  [  Another Group  ]
+	string param = "string value"
+	
+	; the following line is valid having CPPINI_FORCE_QUOTED_STR not defined, see below
+	another string param = another string value
+
+	param4 = 123
+  a    =     b
+
+
+Library classes
+---------------
+
+The library provides 3 ways to read ini files:
+
+1. Inheriting CIniFileBase class and overriding two virtual methods:
+	virtual bool error_msg(const char * msg) = 0;
+	virtual bool param_found(std::string & group, std::string & name, std::string & value) = 0;
+
+The derived class should call CIniFileBase constructor supplying it
+with istream which contains ini file data to be parsed.
+
+	bool parse(bool reset_stream = false);
+To do the parsing parse(bool reset_stream) method is used. If reset_stream
+is true then data stream read position will be set to the beginning.
+The function returns false if any of overridden methods return false;
+
+error_msg method is called when parse function detects error
+in the ini file being read. Protected int line class valiable could be
+used to determine at what line error was found.
+
+param_found method is called each time when a key=value pair is found.
+
+
+2. Implementing IIniFileCallback interface
+
+This is a convenient way when using configuration-storage classes with
+their own inheritance hierarchy. Such classes only need to implement the
+callback IIniFileCallback, create CIniFileCallback class and call parse()
+method.
+
+Callback methods (ini_*) will be called when another key=value pair or
+error is found;
+
+class IIniFileCallback {
+public:
+	virtual bool ini_error_msg(size_t line, const char * msg) = 0;
+	virtual bool ini_param_found(std::string & group, std::string & name, std::string & value) = 0;
+};
+
+
+3. Using CIniFileMap class
+
+Required CPPINI_MAP to be defined before including "cppini.hpp".
+
+This class stores all found key=value pairs inside a map, which is available
+after a call to parse() method.
+
+To get the map get_map() method can be used. It returns a map of
+CIniFileMap_Class class which is defined as
+
+public std::map<std::string, std::string> { };
+
+Map key is made of a group name, a dot and a key name (group.key).
+
+Errors are stored as instances of CIniFileMap_Error in a vector of class 
+CIniFileMap_ErrorList.
+
+struct CIniFileMap_Error {
+	const char * msg;
+	size_t line;
+}
+
+Error list can be retrieved by a call to get_errors().
+
+reset() method of CIniFileMap clears both map and error list.
+
+
+Configuration
+-------------
+
+There are two defined that control library behaviour.
+
+CPPINI_MAP - allows to use CIniFileMap class.
+
+CPPINI_FORCE_QUOTED_STR - forces all string values containing spaces
+to be enclosed in double quotes.
+
+
+Restrictions
+------------
+
+* Library doesn't allow multiline values.
+* Quotes escape is not implemented.
+* Single quotes are not supported.
+* All kinds of values parsing should be done by user's code.
+* Sections with missing closing bracket generate error but are accepted.
+
+
+Comments are welcome at https://github.com/zyura/cppini
