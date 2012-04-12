@@ -5,7 +5,7 @@
 * > Main header file
 *
 * Author: Yurij Zagrebnoy © 2012
-* Version: 1.0.0
+* Version: 1.0.2
 * Git page: https://github.com/zyura/cppini
 * License: http://www.opensource.org/licenses/MIT
 * (the information above should not be removed)
