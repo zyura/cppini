@@ -108,7 +108,7 @@ Error list can be retrieved by a call to get_errors().
 reset() method of CIniFileMap clears both map and error list.
 
 
-4. Using CIniFileMap class with get() methods
+4. Using CIniFileMap class with get() or try_get() methods
 
 The simplest way of using the library. All you need is to create stream,
 CIniFileMap and use get() methods:
@@ -116,7 +116,8 @@ CIniFileMap and use get() methods:
 ifstream in("data.ini");
 CIniFileMap im(in); // will parse the file automatically
 cout << inimap.get("group.param") << endl;
-cout << inimap.get_int("group.int_param") * 2 << endl;
+cout << inimap.geti("group.int_param") * 2 << endl;
+cout << inimap.getd("group.float_param") * 3.0 << endl;
 
 
 Configuration

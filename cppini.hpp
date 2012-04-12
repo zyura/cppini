@@ -19,6 +19,7 @@
 #ifdef CPPINI_MAP
 	#include <map>
 	#include <vector>
+	#include <sstream>
 #endif
 
 class CIniFileBase {
@@ -82,6 +83,7 @@ public:
 #ifdef CPPINI_MAP
 
 class CIniFileMap_Class : public std::map<std::string, std::string> { };
+typedef CIniFileMap_Class::const_iterator CIniFileMap_Iter;
 
 class CIniFileMap_Pair : public std::pair<std::string, std::string> {
 public:
@@ -100,7 +102,10 @@ struct CIniFileMap_Error {
 };
 
 class CIniFileMap_ErrorList : public std::vector<CIniFileMap_Error> { };
+typedef CIniFileMap_ErrorList::const_iterator CIniFileMap_ErrorIter;
 
+bool ini_conv_strtoint(std::string & str, int & val);
+bool ini_conv_strtodbl(std::string & str, double & val);
 
 class CIniFileMap : public CIniFileBase {
 protected:
@@ -114,8 +119,9 @@ protected:
 	}
 
 	virtual bool param_found(std::string & group, std::string & name, std::string & value) {
-		std::string key = group + "." + name;
-		map.insert(CIniFileMap_Pair(key, value));
+		std::stringstream sstr;
+		sstr << group << '.' << name;
+		map.insert(CIniFileMap_Pair(sstr.str(), value));
 		return true;
 	}
 public:
@@ -128,41 +134,83 @@ public:
 		err.clear();
 	}
 
-	inline CIniFileMap_Class & get_map() {
+	/*
+	* usually used as
+	*   const CIniFileMap_Class & mp = inimap.get_map();
+	*   for (CIniFileMap_Iter it = mp.begin(); it != mp.end(); it++)
+	*     ...
+	*/
+	inline const CIniFileMap_Class & get_map() const {
 		return map;
 	}
 
-	inline CIniFileMap_ErrorList & get_errors() {
+	/*
+	* usually used as
+	*   const CIniFileMap_ErrorList & err = inimap.get_errors();
+	*     for (CIniFileMap_ErrorIter it = err.begin(); it != err.end(); it++)
+	*       ...
+	*/
+	inline const CIniFileMap_ErrorList & get_errors() const {
 		return err;
 	}
 
-	std::string get(std::string group, std::string name, const char * default = "") {
-		return get(group + "." + name, default);
+	std::string get(const char * group, const char * name, const char * def = "") const {
+		std::stringstream sstr;
+		sstr << group << '.' << name;
+		return get(sstr.str(), def);
 	}
 
-	std::string get(const char * key, const char * default = "") {
+	std::string get(const char * key, const char * def = "") const {
 		std::string skey(key);
-		return get(skey, default);
+		return get(skey);
 	}
 
-	std::string get(std::string & key, const char * default = "") {
-		CIniFileMap_Class::iterator it = map.find(key);
-		if (it == map.end()) return default;
-		return it->second;
+	std::string get(std::string & skey, const char * def = "") const {
+		CIniFileMap_Class::const_iterator it = map.find(skey);
+		return it == map.end() ? def : it->second;
 	}
 
-	int get_int(const char * key, const int default = 0) {
+	bool try_get(std::string & skey, std::string & value) const {
+		CIniFileMap_Class::const_iterator it = map.find(skey);
+		if (it == map.end()) return false;
+		value = it->second;
+		return true;
+	}
+
+	bool try_get(const char * key, std::string & value) const {
 		std::string skey(key);
-		return get_int(skey, default);
+		return try_get(skey, value);
 	}
 
-	int get_int(std::string & key, const int default = 0) {
-		std::string val = get(key);
-		if (val.size() == 0) return default;
+	inline int geti(const char * key, const int def = 0) const {
+		return get<int, ini_conv_strtoint>(key, def);
+	}
 
-		char *end;
-    int result = strtol(val.c_str(), &end, 10);
-		return *end == '\0' ? result : default;
+	inline double getd(const char * key, const double def = 0) const {
+		return get<double, ini_conv_strtodbl>(key, def);
+	}
+
+	inline bool try_geti(const char * key, int & value) const {
+		return try_get<int, ini_conv_strtoint>(key, value);
+	}
+
+	inline bool try_getd(const char * key, double & value) const {
+		return try_get<double, ini_conv_strtodbl>(key, value);
+	}
+
+	template <typename T, bool (*conv_func)(std::string &, T &)>
+	T get(const char * key, const T def) const {
+		std::string value;
+		if (!try_get(key, value)) return def;
+		T result;
+		return conv_func(value, result) ? result : def;
+	}
+
+	template <typename T, bool (*conv_func)(std::string &, T &)>
+	bool try_get(const char * key, T & result) const {
+		std::string value;
+		if (!try_get(key, value)) return false;
+		return conv_func(value, result);
 	}
 };
 

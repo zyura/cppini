@@ -108,3 +108,16 @@ bool CIniFileBase::parse(bool reset_stream) {
 	}
 	return true;
 }
+
+
+bool ini_conv_strtoint(std::string & str, int & val) {
+	char *end;
+  val = strtol(str.c_str(), &end, 10);
+	return *end == '\0';
+}
+
+bool ini_conv_strtodbl(std::string & str, double & val) {
+	char *end;
+	val = strtod(str.c_str(), &end);
+	return *end == '\0';
+}

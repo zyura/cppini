@@ -94,21 +94,26 @@ int main() {
 
 	cout << endl << "Third way - use CIniFileMap class" << endl;
 	CIniFileMap inimap(in, true, true); // do_parse, reset_stream
-	CIniFileMap_Class & mp = inimap.get_map();
-	for (CIniFileMap_Class::iterator it = mp.begin(); it != mp.end(); it++)
+	const CIniFileMap_Class & mp = inimap.get_map();
+	for (CIniFileMap_Iter it = mp.begin(); it != mp.end(); it++)
 		cout << "[3] " << it->first << " = " << it->second << endl;
-	CIniFileMap_ErrorList & err = inimap.get_errors();
+	const CIniFileMap_ErrorList & err = inimap.get_errors();
 	if (err.size()) {
 		cout << "Ini file parse errors:" << endl;
-		for (CIniFileMap_ErrorList::iterator it = err.begin(); it != err.end(); it++)
+		for (CIniFileMap_ErrorIter it = err.begin(); it != err.end(); it++)
 			cout << it->msg << " at line " << it->line << endl;
 	}
 
 
-	cout << endl << "Using CIniFileMap.get()" << endl;
-	cout << inimap.get("PHP.output_buffering") << endl;
-	cout << inimap.get_int("PHP.precision") * 2 << endl;
+	cout << endl << "Fourth way - using CIniFileMap.get()" << endl;
+	cout << "PHP.output_buffering = " << inimap.get("PHP.output_buffering") << endl;
+	cout << "twice PHP.precision = " << inimap.geti("PHP.precision") * 2 << endl;
 
+	double prec;
+	if (inimap.try_getd("PHP.precision", prec))
+		cout << "Found PHP.precision: " << prec << endl;
+	else
+		cout << "PHP.precision Not found" << endl;
 
 	string s;
 	getline(cin, s);
