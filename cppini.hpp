@@ -5,6 +5,7 @@
 * > Main header file
 *
 * Author: Yurij Zagrebnoy © 2012
+* Version: 1.0.0
 * Git page: https://github.com/zyura/cppini
 * License: http://www.opensource.org/licenses/MIT
 * (the information above should not be removed)
@@ -43,6 +44,7 @@ protected:
 #else
 	static const int GT_VALUE_FLAGS = GT_QUOTE_CHAR | GT_ALLOW_EMPTY | GT_ALLOW_SPACE;
 #endif
+	static const int GT_PARAM_FLAGS = GT_ALLOW_SPACE;
 
 	void error(const char * msg);
 	char skip_space();
@@ -117,7 +119,9 @@ protected:
 		return true;
 	}
 public:
-	CIniFileMap(std::istream & ins) : CIniFileBase(ins) { };
+	CIniFileMap(std::istream & ins, bool do_parse = true, bool reset_stream = false) : CIniFileBase(ins) {
+		if (do_parse) parse(reset_stream);
+	};
 
 	inline void reset() {
 		map.clear();
@@ -130,6 +134,35 @@ public:
 
 	inline CIniFileMap_ErrorList & get_errors() {
 		return err;
+	}
+
+	std::string get(std::string group, std::string name, const char * default = "") {
+		return get(group + "." + name, default);
+	}
+
+	std::string get(const char * key, const char * default = "") {
+		std::string skey(key);
+		return get(skey, default);
+	}
+
+	std::string get(std::string & key, const char * default = "") {
+		CIniFileMap_Class::iterator it = map.find(key);
+		if (it == map.end()) return default;
+		return it->second;
+	}
+
+	int get_int(const char * key, const int default = 0) {
+		std::string skey(key);
+		return get_int(skey, default);
+	}
+
+	int get_int(std::string & key, const int default = 0) {
+		std::string val = get(key);
+		if (val.size() == 0) return default;
+
+		char *end;
+    int result = strtol(val.c_str(), &end, 10);
+		return *end == '\0' ? result : default;
 	}
 };
 

@@ -43,7 +43,7 @@ param2=value2
 Library classes
 ---------------
 
-The library provides 3 ways to read ini files:
+The library provides 4 ways to read ini files:
 
 1. Inheriting CIniFileBase class and overriding two virtual methods:
 	virtual bool error_msg(const char * msg) = 0;
@@ -81,7 +81,7 @@ public:
 };
 
 
-3. Using CIniFileMap class
+3. Using CIniFileMap class and its map
 
 Required CPPINI_MAP to be defined before including "cppini.hpp".
 
@@ -106,6 +106,17 @@ struct CIniFileMap_Error {
 Error list can be retrieved by a call to get_errors().
 
 reset() method of CIniFileMap clears both map and error list.
+
+
+4. Using CIniFileMap class with get() methods
+
+The simplest way of using the library. All you need is to create stream,
+CIniFileMap and use get() methods:
+
+ifstream in("data.ini");
+CIniFileMap im(in); // will parse the file automatically
+cout << inimap.get("group.param") << endl;
+cout << inimap.get_int("group.int_param") * 2 << endl;
 
 
 Configuration

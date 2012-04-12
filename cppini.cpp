@@ -5,6 +5,7 @@
 * > Implementation
 *
 * Author: Yurij Zagrebnoy © 2012
+* Version: 1.0.0
 * Git page: https://github.com/zyura/cppini
 * License: http://www.opensource.org/licenses/MIT
 * (the information above should not be removed)
@@ -28,14 +29,16 @@ bool CIniFileBase::get_text(string & text, char term, int flags) {
 		flags |= GT_ALLOW_SPACE;
 		pos++;
 	}
-	size_t start = pos, len = s.length();
+	size_t start = pos, len = s.length(), non_space = start - 1;
 	char c;
 	for (; pos < len; pos++) {
 		c = s[pos];
-		if (!(flags & GT_ALLOW_SPACE) && isspace(c) || c == term) break;
+		int sp = isspace(c);
+		if (!(flags & GT_ALLOW_SPACE) && sp || c == term) break;
+		if (!sp) non_space = pos;
 	}
-	if (pos == start && !(flags & GT_ALLOW_EMPTY)) return false;
-	text = s.substr(start, pos - start);
+	if ((non_space < start) && !(flags & GT_ALLOW_EMPTY)) return false;
+	text = s.substr(start, non_space - start + 1);
 	if (quote && c == term) pos++;
 	return true;
 }
@@ -82,8 +85,8 @@ bool CIniFileBase::parse(bool reset_stream) {
 						pos++, state = S_END;
 					break;
 				case S_PARAM:
-					value = "";
-					if (!get_text(param, '='))
+					value.clear();
+					if (!get_text(param, '=', GT_PARAM_FLAGS))
 						error("Parameter name is invalid");
 					else if (skip_space() != '=')
 						error("Equal sign expected");
