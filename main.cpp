@@ -5,6 +5,7 @@
 * > Examples
 *
 * Author: Yurij Zagrebnoy © 2012
+* Version: 1.0.0
 * Git page: https://github.com/zyura/cppini
 * License: http://www.opensource.org/licenses/MIT
 * (the information above should not be removed)
@@ -79,7 +80,7 @@ public:
 
 
 int main() {
-	ifstream in("data.ini", ifstream::in);
+	ifstream in("data.ini");
 
 	cout << "First way - inherit CIniFileBase" << endl;
 	CIniFile ini(in);
@@ -91,18 +92,22 @@ int main() {
 	cfg->read(in);
 
 
-	cout << endl << "Third way - use IIniFileMap class" << endl;
-	CIniFileMap inimap(in);
-	inimap.parse(true); // reset input stream position
+	cout << endl << "Third way - use CIniFileMap class" << endl;
+	CIniFileMap inimap(in, true, true); // do_parse, reset_stream
 	CIniFileMap_Class & mp = inimap.get_map();
 	for (CIniFileMap_Class::iterator it = mp.begin(); it != mp.end(); it++)
-		cout << it->first << " = " << it->second << endl;
+		cout << "[3] " << it->first << " = " << it->second << endl;
 	CIniFileMap_ErrorList & err = inimap.get_errors();
 	if (err.size()) {
 		cout << "Ini file parse errors:" << endl;
 		for (CIniFileMap_ErrorList::iterator it = err.begin(); it != err.end(); it++)
 			cout << it->msg << " at line " << it->line << endl;
 	}
+
+
+	cout << endl << "Using CIniFileMap.get()" << endl;
+	cout << inimap.get("PHP.output_buffering") << endl;
+	cout << inimap.get_int("PHP.precision") * 2 << endl;
 
 
 	string s;
